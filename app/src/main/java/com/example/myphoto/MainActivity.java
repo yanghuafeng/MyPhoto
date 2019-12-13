@@ -50,19 +50,6 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         initNavi();
         sharedPreferences = getApplicationContext().getSharedPreferences("myphoto",MODE_PRIVATE);
-        if(sharedPreferences.getBoolean("FIRST_START", true)) {
-            try {
-                addText("正在解压文件。。。");
-                Utils.unZipAssets(this, "package.zip", path, true);
-                sharedPreferences.edit().putBoolean("FIRST_START", false).apply();
-                addText("解压完成，右上角选择图片");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }else {
-            addText("右上角选择图片");
-        }
-
     }
 
     @Override

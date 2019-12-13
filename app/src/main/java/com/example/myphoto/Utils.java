@@ -86,30 +86,14 @@ public class Utils {
             return null;
         BitmapFactory.Options newOpts = new BitmapFactory.Options();
         //开始读入图片，此时把options.inJustDecodeBounds 设回true了
-        newOpts.inJustDecodeBounds = true;
-        Bitmap bitmap = BitmapFactory.decodeFile(srcPath, newOpts);//此时返回bm为空
-        newOpts.inJustDecodeBounds = false;
-        int w = newOpts.outWidth;
-        int h = newOpts.outHeight;
-        //现在主流手机比较多是800*480分辨率，所以高和宽我们设置为
-        float hh = 400f;//这里设置高度为800f
-        float ww = 400f;//这里设置宽度为480f
+        Bitmap bitmap;
+
+        bitmap = BitmapFactory.decodeFile(srcPath);
         if(small) {
-            hh = 100f;//这里设置高度为800f
-            ww = 100f;//这里设置宽度为480f
+            bitmap = centerSquareScaleBitmap(bitmap,100);
+        }else{
+            bitmap = centerSquareScaleBitmap(bitmap,300);
         }
-        //缩放比。由于是固定比例缩放，只用高或者宽其中一个数据进行计算即可
-        int be = 1;//be=1表示不缩放
-        if (w > h && w > ww) {//如果宽度大的话根据宽度固定大小缩放
-            be = (int) (newOpts.outWidth / ww);
-        } else if (w < h && h > hh) {//如果高度高的话根据宽度固定大小缩放
-            be = (int) (newOpts.outHeight / hh);
-        }
-        if (be <= 0)
-            be = 1;
-        newOpts.inSampleSize = be;//设置缩放比例
-        //重新读入图片，注意此时已经把options.inJustDecodeBounds 设回false了
-        bitmap = BitmapFactory.decodeFile(srcPath, newOpts);
         return compressImage(bitmap);//压缩好比例大小后再进行质量压缩
     }
 
@@ -129,5 +113,53 @@ public class Utils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 将给定图片维持宽高比缩放后，截取正中间的正方形部分。
+     * @param bitmap      原图
+     * @param edgeLength  希望得到的正方形部分的边长
+     * @return  缩放截取正中部分后的位图。
+     */
+    public static Bitmap centerSquareScaleBitmap(Bitmap bitmap, int edgeLength)
+    {
+        if(null == bitmap || edgeLength <= 0)
+        {
+            return  null;
+        }
+
+        Bitmap result = bitmap;
+        int widthOrg = bitmap.getWidth();
+        int heightOrg = bitmap.getHeight();
+
+        if(widthOrg > edgeLength && heightOrg > edgeLength)
+        {
+            //压缩到一个最小长度是edgeLength的bitmap
+            int longerEdge = (int)(edgeLength * Math.max(widthOrg, heightOrg) / Math.min(widthOrg, heightOrg));
+            int scaledWidth = widthOrg > heightOrg ? longerEdge : edgeLength;
+            int scaledHeight = widthOrg > heightOrg ? edgeLength : longerEdge;
+            Bitmap scaledBitmap;
+
+            try{
+                scaledBitmap = Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true);
+            }
+            catch(Exception e){
+                return null;
+            }
+
+            //从图中截取正中间的正方形部分。
+            int xTopLeft = (scaledWidth - edgeLength) / 2;
+            int yTopLeft = (scaledHeight - edgeLength) / 2;
+
+            try{
+                result = Bitmap.createBitmap(scaledBitmap, xTopLeft, yTopLeft, edgeLength, edgeLength);
+                scaledBitmap.recycle();
+            }
+            catch(Exception e){
+                return null;
+            }
+        }
+
+        return result;
     }
 }

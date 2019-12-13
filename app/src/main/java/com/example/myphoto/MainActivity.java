@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     };
     private static final int authBaseRequestCode = 1;
     private ArrayList<String> photos;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView)findViewById(R.id.text);
         webView.setWebViewClient(new WebViewClient());
         initNavi();
-        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("myphoto",MODE_PRIVATE);
+        sharedPreferences = getApplicationContext().getSharedPreferences("myphoto",MODE_PRIVATE);
         if(sharedPreferences.getBoolean("FIRST_START", true)) {
             try {
                 addText("正在解压文件。。。");
@@ -165,6 +166,19 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!hasBasePhoneAuth()) {
                 this.requestPermissions(authBaseArr, authBaseRequestCode);
+            }else{
+                if(sharedPreferences.getBoolean("FIRST_START", true)) {
+                    try {
+                        addText("正在解压文件。。。");
+                        Utils.unZipAssets(this, "package.zip", path, true);
+                        sharedPreferences.edit().putBoolean("FIRST_START", false).apply();
+                        addText("解压完成，右上角选择图片");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else {
+                    addText("右上角选择图片");
+                }
             }
         }
     }
@@ -172,6 +186,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(sharedPreferences.getBoolean("FIRST_START", true)) {
+            try {
+                addText("正在解压文件。。。");
+                Utils.unZipAssets(this, "package.zip", path, true);
+                sharedPreferences.edit().putBoolean("FIRST_START", false).apply();
+                addText("解压完成，右上角选择图片");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            addText("右上角选择图片");
+        }
     }
 
     private void addText(String content) {
